@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistema de Comando y Control - Reportes</title>
+  <title>Sistema de Comando y Control - Reportes Ambientales</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -19,14 +19,13 @@
     }
     
     body {
-      padding: 8px;
+      padding: 10px;
       background-color: #f5f5f5;
-      height: 100vh;
     }
     
     .header {
       text-align: center;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
       background-color: #2c3e50;
       color: white;
       padding: 10px;
@@ -35,26 +34,25 @@
     }
     
     .header h1 {
-      font-size: 1.2rem;
-      margin-bottom: 4px;
+      font-size: 1.4rem;
+      margin-bottom: 5px;
     }
     
     .header h2 {
-      font-size: 0.9rem;
+      font-size: 1.1rem;
       font-weight: normal;
       color: #ecf0f1;
     }
     
     .container {
-      width: 100%;
-      height: calc(100% - 70px);
-      border-radius: 8px;
+      max-width: 100%;
+      height: calc(100vh - 100px);
+      border-radius: 10px;
       overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
       background: white;
       display: flex;
       flex-direction: column;
-      position: relative;
     }
     
     #map {
@@ -62,60 +60,35 @@
       flex-grow: 1;
     }
     
-    /* Controles para móvil */
-    .mobile-menu-button {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      z-index: 1000;
-      background: white;
-      border: none;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-      font-size: 1.2rem;
-    }
-    
     .map-controls {
       position: absolute;
-      top: 60px;
-      left: 10px;
-      right: 10px;
+      top: 85px;
+      right: 15px;
       z-index: 1000;
       background: white;
-      padding: 12px;
+      padding: 15px;
       border-radius: 8px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-      max-height: 70vh;
-      overflow-y: auto;
-      display: none;
-    }
-    
-    .map-controls.visible {
-      display: block;
+      width: 300px;
     }
     
     .filter-group {
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
     
     .filter-group label {
       display: block;
-      margin-bottom: 4px;
+      margin-bottom: 5px;
       font-weight: 500;
-      font-size: 0.8rem;
+      font-size: 0.9rem;
     }
     
     select, input, button {
       width: 100%;
-      padding: 8px;
+      padding: 8px 12px;
       border-radius: 6px;
       border: 1px solid #ddd;
-      font-size: 0.8rem;
+      font-size: 0.9rem;
     }
     
     button {
@@ -124,7 +97,7 @@
       border: none;
       cursor: pointer;
       font-weight: 500;
-      margin-top: 4px;
+      margin-top: 5px;
       transition: background-color 0.2s;
     }
     
@@ -142,52 +115,48 @@
     
     .legend {
       position: absolute;
-      bottom: 10px;
-      right: 10px;
+      bottom: 20px;
+      right: 20px;
       z-index: 1000;
       background: white;
-      padding: 8px;
-      border-radius: 6px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-      max-width: 150px;
+      padding: 12px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     }
     
     .legend-item {
       display: flex;
       align-items: center;
-      margin-bottom: 4px;
-      font-size: 0.7rem;
+      margin-bottom: 6px;
     }
     
     .legend-color {
-      width: 12px;
-      height: 12px;
-      margin-right: 6px;
+      width: 18px;
+      height: 18px;
+      margin-right: 8px;
       border-radius: 50%;
       border: 1px solid #fff;
-      box-shadow: 0 0 2px rgba(0,0,0,0.2);
+      box-shadow: 0 0 2px rgba(0,0,0,0.3);
     }
     
     .flatpickr-input {
       background-color: white;
-      font-size: 0.8rem;
     }
     
     #resultadosContainer {
-      max-height: 150px;
+      max-height: 200px;
       overflow-y: auto;
-      margin-top: 8px;
+      margin-top: 10px;
       border: 1px solid #ddd;
       border-radius: 6px;
-      padding: 8px;
+      padding: 10px;
       display: none;
-      font-size: 0.8rem;
     }
     
     .resultado-item {
-      padding: 6px;
+      padding: 8px;
       border-bottom: 1px solid #eee;
-      font-size: 0.8rem;
+      font-size: 0.9rem;
     }
     
     .resultado-item:last-child {
@@ -196,56 +165,11 @@
     
     .controls-container {
       display: flex;
-      gap: 8px;
+      gap: 10px;
     }
     
     .controls-container button {
       flex: 1;
-      padding: 8px;
-      font-size: 0.8rem;
-    }
-    
-    /* Estilos para pantallas más grandes */
-    @media (min-width: 768px) {
-      .mobile-menu-button {
-        display: none;
-      }
-      
-      .map-controls {
-        display: block;
-        position: absolute;
-        top: 15px;
-        right: 15px;
-        left: auto;
-        width: 280px;
-        max-height: none;
-        overflow-y: visible;
-      }
-      
-      .header h1 {
-        font-size: 1.4rem;
-      }
-      
-      .header h2 {
-        font-size: 1.1rem;
-      }
-      
-      .filter-group label {
-        font-size: 0.9rem;
-      }
-      
-      select, input, button {
-        font-size: 0.9rem;
-      }
-      
-      .legend {
-        max-width: none;
-        padding: 10px;
-      }
-      
-      .legend-item {
-        font-size: 0.8rem;
-      }
     }
   </style>
 </head>
@@ -256,11 +180,9 @@
   </div>
   
   <div class="container">
-    <button class="mobile-menu-button" onclick="toggleMenu()">☰</button>
-    
     <div id="map"></div>
     
-    <div class="map-controls" id="controlsPanel">
+    <div class="map-controls">
       <div class="filter-group">
         <label for="filterProblematica">Tipo de problemática</label>
         <select id="filterProblematica">
@@ -283,14 +205,14 @@
       </div>
       
       <div class="controls-container">
-        <button onclick="cargarDatos()">Aplicar</button>
-        <button onclick="mostrarResultados()">Ver datos</button>
+        <button onclick="cargarDatos()">Aplicar filtros</button>
+        <button onclick="mostrarResultados()">Ver resultados</button>
       </div>
       
       <div id="resultadosContainer"></div>
       
-      <button class="button-export" onclick="exportarAExcel()" style="margin-top: 8px; display: none;" id="exportButton">
-        📊 Exportar Excel
+      <button class="button-export" onclick="exportarAExcel()" style="margin-top: 10px; display: none;" id="exportButton">
+        📊 Exportar a Excel
       </button>
     </div>
     
@@ -317,12 +239,6 @@
   <script>
     // Variables globales
     let datosFiltrados = [];
-    
-    // Función para mostrar/ocultar menú en móviles
-    function toggleMenu() {
-      const panel = document.getElementById('controlsPanel');
-      panel.classList.toggle('visible');
-    }
     
     // Mapa centrado en La Plata por defecto
     var map = L.map('map').setView([-34.9223, -57.9551], 13);
@@ -359,10 +275,10 @@
       return L.divIcon({
         className: 'custom-marker',
         html: `<div style="background-color: ${problematicaColors[problematica] || '#333'}; 
-               width: 18px; height: 18px; border-radius: 50%; 
-               border: 2px solid white; box-shadow: 0 0 3px rgba(0,0,0,0.3);"></div>`,
-        iconSize: [18, 18],
-        iconAnchor: [9, 9]
+               width: 20px; height: 20px; border-radius: 50%; 
+               border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.3);"></div>`,
+        iconSize: [20, 20],
+        iconAnchor: [10, 10]
       });
     }
     
@@ -370,6 +286,7 @@
     function parseFecha(fechaStr) {
       if (!fechaStr) return null;
       
+      // Intenta parsear el formato dd/mm/yyyy hh:mm:ss
       const partes = fechaStr.split(' ');
       if (partes.length > 0) {
         const fechaPartes = partes[0].split('/');
@@ -397,22 +314,27 @@
           const fechaDesdeStr = document.getElementById('filterFechaDesde').value;
           const fechaHastaStr = document.getElementById('filterFechaHasta').value;
           
+          // Convertir fechas de filtro
           let fechaDesde = fechaDesdeStr ? 
             flatpickr.parseDate(fechaDesdeStr, "d/m/Y") : null;
           let fechaHasta = fechaHastaStr ? 
             flatpickr.parseDate(fechaHastaStr, "d/m/Y") : null;
           
+          // Ajustar fecha hasta para incluir todo el día
           if (fechaHasta) {
             fechaHasta.setHours(23, 59, 59, 999);
           }
           
+          // Filtrar datos
           datosFiltrados = data.filter(item => {
             if (!item.Y || !item.X) return false;
             
+            // Filtrar por problemática
             if (filtroProblematica !== 'todas' && item.Problemática !== filtroProblematica) {
               return false;
             }
             
+            // Filtrar por fecha
             const fechaReporte = parseFecha(item['Fecha y Hora de Carga']);
             if (fechaReporte) {
               if (fechaDesde && fechaReporte < fechaDesde) return false;
@@ -422,11 +344,13 @@
             return true;
           });
           
+          // Mostrar marcadores
           datosFiltrados.forEach(item => {
             const marker = L.marker([item.Y, item.X], {
               icon: crearIcono(item.Problemática)
             }).addTo(markersLayer);
             
+            // Popup con información
             marker.bindPopup(`
               <strong>${item.Problemática}</strong><br>
               <small>${item.Dirección || 'Sin dirección'}</small><br>
@@ -435,13 +359,9 @@
             `);
           });
           
+          // Mostrar botón de exportar si hay resultados
           if (datosFiltrados.length > 0) {
             document.getElementById('exportButton').style.display = 'block';
-          }
-          
-          // Ocultar menú en móviles después de aplicar filtros
-          if (window.innerWidth < 768) {
-            document.getElementById('controlsPanel').classList.remove('visible');
           }
         })
         .catch(error => {
@@ -471,11 +391,6 @@
       }
       
       container.style.display = 'block';
-      
-      // Ocultar menú en móviles después de mostrar resultados
-      if (window.innerWidth < 768) {
-        document.getElementById('controlsPanel').classList.remove('visible');
-      }
     }
     
     // Exportar a Excel
@@ -485,6 +400,7 @@
         return;
       }
       
+      // Preparar datos para exportación
       const datosExportar = datosFiltrados.map(item => ({
         'Problemática': item.Problemática,
         'Dirección': item.Dirección || '',
@@ -492,28 +408,19 @@
         'Hora': item['Fecha y Hora de Carga'] ? item['Fecha y Hora de Carga'].split(' ')[1] || '' : ''
       }));
       
+      // Crear libro de trabajo
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.json_to_sheet(datosExportar);
       
+      // Añadir hoja al libro
       XLSX.utils.book_append_sheet(wb, ws, "Reportes");
       
-      XLSX.writeFile(wb, `reportes_${new Date().toISOString().slice(0,10)}.xlsx`);
+      // Exportar archivo
+      XLSX.writeFile(wb, `reportes_ambientales_${new Date().toISOString().slice(0,10)}.xlsx`);
     }
     
     // Cargar datos al iniciar
     cargarDatos();
-    
-    // Ocultar menú al hacer clic fuera en móviles
-    document.addEventListener('click', function(event) {
-      const controlsPanel = document.getElementById('controlsPanel');
-      const menuButton = document.querySelector('.mobile-menu-button');
-      
-      if (window.innerWidth < 768 && 
-          !controlsPanel.contains(event.target) && 
-          event.target !== menuButton) {
-        controlsPanel.classList.remove('visible');
-      }
-    });
   </script>
 </body>
 </html>
