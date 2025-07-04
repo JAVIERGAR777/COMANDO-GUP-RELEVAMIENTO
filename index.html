@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistema de Comando y Control - Reportes Ambientales</title>
+  <title>Sistema de Comando y Control - Reportes</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -19,13 +19,14 @@
     }
     
     body {
-      padding: 10px;
+      padding: 8px;
       background-color: #f5f5f5;
+      height: 100vh;
     }
     
     .header {
       text-align: center;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       background-color: #2c3e50;
       color: white;
       padding: 10px;
@@ -34,25 +35,26 @@
     }
     
     .header h1 {
-      font-size: 1.4rem;
-      margin-bottom: 5px;
+      font-size: 1.2rem;
+      margin-bottom: 4px;
     }
     
     .header h2 {
-      font-size: 1.1rem;
+      font-size: 0.9rem;
       font-weight: normal;
       color: #ecf0f1;
     }
     
     .container {
-      max-width: 100%;
-      height: calc(100vh - 100px);
-      border-radius: 10px;
+      width: 100%;
+      height: calc(100% - 70px);
+      border-radius: 8px;
       overflow: hidden;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       background: white;
       display: flex;
       flex-direction: column;
+      position: relative;
     }
     
     #map {
@@ -60,35 +62,60 @@
       flex-grow: 1;
     }
     
-    .map-controls {
+    /* Controles para móvil */
+    .mobile-menu-button {
       position: absolute;
-      top: 85px;
-      right: 15px;
+      top: 10px;
+      left: 10px;
       z-index: 1000;
       background: white;
-      padding: 15px;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      font-size: 1.2rem;
+    }
+    
+    .map-controls {
+      position: absolute;
+      top: 60px;
+      left: 10px;
+      right: 10px;
+      z-index: 1000;
+      background: white;
+      padding: 12px;
       border-radius: 8px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-      width: 300px;
+      max-height: 70vh;
+      overflow-y: auto;
+      display: none;
+    }
+    
+    .map-controls.visible {
+      display: block;
     }
     
     .filter-group {
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
     
     .filter-group label {
       display: block;
-      margin-bottom: 5px;
+      margin-bottom: 4px;
       font-weight: 500;
-      font-size: 0.9rem;
+      font-size: 0.8rem;
     }
     
     select, input, button {
       width: 100%;
-      padding: 8px 12px;
+      padding: 8px;
       border-radius: 6px;
       border: 1px solid #ddd;
-      font-size: 0.9rem;
+      font-size: 0.8rem;
     }
     
     button {
@@ -97,7 +124,7 @@
       border: none;
       cursor: pointer;
       font-weight: 500;
-      margin-top: 5px;
+      margin-top: 4px;
       transition: background-color 0.2s;
     }
     
@@ -115,48 +142,52 @@
     
     .legend {
       position: absolute;
-      bottom: 20px;
-      right: 20px;
+      bottom: 10px;
+      right: 10px;
       z-index: 1000;
       background: white;
-      padding: 12px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      padding: 8px;
+      border-radius: 6px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      max-width: 150px;
     }
     
     .legend-item {
       display: flex;
       align-items: center;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
+      font-size: 0.7rem;
     }
     
     .legend-color {
-      width: 18px;
-      height: 18px;
-      margin-right: 8px;
+      width: 12px;
+      height: 12px;
+      margin-right: 6px;
       border-radius: 50%;
       border: 1px solid #fff;
-      box-shadow: 0 0 2px rgba(0,0,0,0.3);
+      box-shadow: 0 0 2px rgba(0,0,0,0.2);
     }
     
     .flatpickr-input {
       background-color: white;
+      font-size: 0.8rem;
     }
     
     #resultadosContainer {
-      max-height: 200px;
+      max-height: 150px;
       overflow-y: auto;
-      margin-top: 10px;
+      margin-top: 8px;
       border: 1px solid #ddd;
       border-radius: 6px;
-      padding: 10px;
+      padding: 8px;
       display: none;
+      font-size: 0.8rem;
     }
     
     .resultado-item {
-      padding: 8px;
+      padding: 6px;
       border-bottom: 1px solid #eee;
-      font-size: 0.9rem;
+      font-size: 0.8rem;
     }
     
     .resultado-item:last-child {
@@ -165,11 +196,56 @@
     
     .controls-container {
       display: flex;
-      gap: 10px;
+      gap: 8px;
     }
     
     .controls-container button {
       flex: 1;
+      padding: 8px;
+      font-size: 0.8rem;
+    }
+    
+    /* Estilos para pantallas más grandes */
+    @media (min-width: 768px) {
+      .mobile-menu-button {
+        display: none;
+      }
+      
+      .map-controls {
+        display: block;
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        left: auto;
+        width: 280px;
+        max-height: none;
+        overflow-y: visible;
+      }
+      
+      .header h1 {
+        font-size: 1.4rem;
+      }
+      
+      .header h2 {
+        font-size: 1.1rem;
+      }
+      
+      .filter-group label {
+        font-size: 0.9rem;
+      }
+      
+      select, input, button {
+        font-size: 0.9rem;
+      }
+      
+      .legend {
+        max-width: none;
+        padding: 10px;
+      }
+      
+      .legend-item {
+        font-size: 0.8rem;
+      }
     }
   </style>
 </head>
@@ -180,9 +256,11 @@
   </div>
   
   <div class="container">
+    <button class="mobile-menu-button" onclick="toggleMenu()">☰</button>
+    
     <div id="map"></div>
     
-    <div class="map-controls">
+    <div class="map-controls" id="controlsPanel">
       <div class="filter-group">
         <label for="filterProblematica">Tipo de problemática</label>
         <select id="filterProblematica">
@@ -205,14 +283,14 @@
       </div>
       
       <div class="controls-container">
-        <button onclick="cargarDatos()">Aplicar filtros</button>
-        <button onclick="mostrarResultados()">Ver resultados</button>
+        <button onclick="cargarDatos()">Aplicar</button>
+        <button onclick="mostrarResultados()">Ver datos</button>
       </div>
       
       <div id="resultadosContainer"></div>
       
-      <button class="button-export" onclick="exportarAExcel()" style="margin-top: 10px; display: none;" id="exportButton">
-        📊 Exportar a Excel
+      <button class="button-export" onclick="exportarAExcel()" style="margin-top: 8px; display: none;" id="exportButton">
+        📊 Exportar Excel
       </button>
     </div>
     
@@ -237,13 +315,22 @@
   </div>
 
   <script>
+    // Variables globales
     let datosFiltrados = [];
     
+    // Función para mostrar/ocultar menú en móviles
+    function toggleMenu() {
+      const panel = document.getElementById('controlsPanel');
+      panel.classList.toggle('visible');
+    }
+    
+    // Mapa centrado en La Plata por defecto
     var map = L.map('map').setView([-34.9223, -57.9551], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap'
     }).addTo(map);
     
+    // Configurar datepickers
     flatpickr("#filterFechaDesde", {
       locale: "es",
       dateFormat: "d/m/Y",
@@ -256,8 +343,10 @@
       maxDate: new Date()
     });
     
+    // Capa para los marcadores
     var markersLayer = L.layerGroup().addTo(map);
     
+    // Colores por tipo de problemática
     var problematicaColors = {
       "Postes Caídos": "#e74c3c",
       "Autos Quemados": "#3498db",
@@ -265,17 +354,19 @@
       "Auto abandonado / Notificar": "#f39c12"
     };
     
+    // Icono personalizado
     function crearIcono(problematica) {
       return L.divIcon({
         className: 'custom-marker',
         html: `<div style="background-color: ${problematicaColors[problematica] || '#333'}; 
-               width: 20px; height: 20px; border-radius: 50%; 
-               border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.3);"></div>`,
-        iconSize: [20, 20],
-        iconAnchor: [10, 10]
+               width: 18px; height: 18px; border-radius: 50%; 
+               border: 2px solid white; box-shadow: 0 0 3px rgba(0,0,0,0.3);"></div>`,
+        iconSize: [18, 18],
+        iconAnchor: [9, 9]
       });
     }
     
+    // Convertir fecha de string a objeto Date
     function parseFecha(fechaStr) {
       if (!fechaStr) return null;
       
@@ -293,6 +384,7 @@
       return null;
     }
     
+    // Cargar datos de la hoja de cálculo
     function cargarDatos() {
       markersLayer.clearLayers();
       document.getElementById('resultadosContainer').style.display = 'none';
@@ -346,6 +438,11 @@
           if (datosFiltrados.length > 0) {
             document.getElementById('exportButton').style.display = 'block';
           }
+          
+          // Ocultar menú en móviles después de aplicar filtros
+          if (window.innerWidth < 768) {
+            document.getElementById('controlsPanel').classList.remove('visible');
+          }
         })
         .catch(error => {
           console.error('Error al cargar datos:', error);
@@ -353,6 +450,7 @@
         });
     }
     
+    // Mostrar resultados en lista
     function mostrarResultados() {
       const container = document.getElementById('resultadosContainer');
       container.innerHTML = '';
@@ -373,8 +471,14 @@
       }
       
       container.style.display = 'block';
+      
+      // Ocultar menú en móviles después de mostrar resultados
+      if (window.innerWidth < 768) {
+        document.getElementById('controlsPanel').classList.remove('visible');
+      }
     }
     
+    // Exportar a Excel
     function exportarAExcel() {
       if (datosFiltrados.length === 0) {
         alert("No hay datos para exportar");
@@ -393,10 +497,23 @@
       
       XLSX.utils.book_append_sheet(wb, ws, "Reportes");
       
-      XLSX.writeFile(wb, `reportes_ambientales_${new Date().toISOString().slice(0,10)}.xlsx`);
+      XLSX.writeFile(wb, `reportes_${new Date().toISOString().slice(0,10)}.xlsx`);
     }
     
+    // Cargar datos al iniciar
     cargarDatos();
+    
+    // Ocultar menú al hacer clic fuera en móviles
+    document.addEventListener('click', function(event) {
+      const controlsPanel = document.getElementById('controlsPanel');
+      const menuButton = document.querySelector('.mobile-menu-button');
+      
+      if (window.innerWidth < 768 && 
+          !controlsPanel.contains(event.target) && 
+          event.target !== menuButton) {
+        controlsPanel.classList.remove('visible');
+      }
+    });
   </script>
 </body>
 </html>
