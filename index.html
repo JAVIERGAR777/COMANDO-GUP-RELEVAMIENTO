@@ -237,16 +237,13 @@
   </div>
 
   <script>
-    // Variables globales
     let datosFiltrados = [];
     
-    // Mapa centrado en La Plata por defecto
     var map = L.map('map').setView([-34.9223, -57.9551], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap'
     }).addTo(map);
     
-    // Configurar datepickers
     flatpickr("#filterFechaDesde", {
       locale: "es",
       dateFormat: "d/m/Y",
@@ -259,10 +256,8 @@
       maxDate: new Date()
     });
     
-    // Capa para los marcadores
     var markersLayer = L.layerGroup().addTo(map);
     
-    // Colores por tipo de problemática
     var problematicaColors = {
       "Postes Caídos": "#e74c3c",
       "Autos Quemados": "#3498db",
@@ -270,7 +265,6 @@
       "Auto abandonado / Notificar": "#f39c12"
     };
     
-    // Icono personalizado
     function crearIcono(problematica) {
       return L.divIcon({
         className: 'custom-marker',
@@ -282,11 +276,9 @@
       });
     }
     
-    // Convertir fecha de string a objeto Date
     function parseFecha(fechaStr) {
       if (!fechaStr) return null;
       
-      // Intenta parsear el formato dd/mm/yyyy hh:mm:ss
       const partes = fechaStr.split(' ');
       if (partes.length > 0) {
         const fechaPartes = partes[0].split('/');
@@ -301,7 +293,6 @@
       return null;
     }
     
-    // Cargar datos de la hoja de cálculo
     function cargarDatos() {
       markersLayer.clearLayers();
       document.getElementById('resultadosContainer').style.display = 'none';
@@ -314,27 +305,22 @@
           const fechaDesdeStr = document.getElementById('filterFechaDesde').value;
           const fechaHastaStr = document.getElementById('filterFechaHasta').value;
           
-          // Convertir fechas de filtro
           let fechaDesde = fechaDesdeStr ? 
             flatpickr.parseDate(fechaDesdeStr, "d/m/Y") : null;
           let fechaHasta = fechaHastaStr ? 
             flatpickr.parseDate(fechaHastaStr, "d/m/Y") : null;
           
-          // Ajustar fecha hasta para incluir todo el día
           if (fechaHasta) {
             fechaHasta.setHours(23, 59, 59, 999);
           }
           
-          // Filtrar datos
           datosFiltrados = data.filter(item => {
             if (!item.Y || !item.X) return false;
             
-            // Filtrar por problemática
             if (filtroProblematica !== 'todas' && item.Problemática !== filtroProblematica) {
               return false;
             }
             
-            // Filtrar por fecha
             const fechaReporte = parseFecha(item['Fecha y Hora de Carga']);
             if (fechaReporte) {
               if (fechaDesde && fechaReporte < fechaDesde) return false;
@@ -344,13 +330,11 @@
             return true;
           });
           
-          // Mostrar marcadores
           datosFiltrados.forEach(item => {
             const marker = L.marker([item.Y, item.X], {
               icon: crearIcono(item.Problemática)
             }).addTo(markersLayer);
             
-            // Popup con información
             marker.bindPopup(`
               <strong>${item.Problemática}</strong><br>
               <small>${item.Dirección || 'Sin dirección'}</small><br>
@@ -359,7 +343,6 @@
             `);
           });
           
-          // Mostrar botón de exportar si hay resultados
           if (datosFiltrados.length > 0) {
             document.getElementById('exportButton').style.display = 'block';
           }
@@ -370,7 +353,6 @@
         });
     }
     
-    // Mostrar resultados en lista
     function mostrarResultados() {
       const container = document.getElementById('resultadosContainer');
       container.innerHTML = '';
@@ -393,14 +375,12 @@
       container.style.display = 'block';
     }
     
-    // Exportar a Excel
     function exportarAExcel() {
       if (datosFiltrados.length === 0) {
         alert("No hay datos para exportar");
         return;
       }
       
-      // Preparar datos para exportación
       const datosExportar = datosFiltrados.map(item => ({
         'Problemática': item.Problemática,
         'Dirección': item.Dirección || '',
@@ -408,18 +388,14 @@
         'Hora': item['Fecha y Hora de Carga'] ? item['Fecha y Hora de Carga'].split(' ')[1] || '' : ''
       }));
       
-      // Crear libro de trabajo
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.json_to_sheet(datosExportar);
       
-      // Añadir hoja al libro
       XLSX.utils.book_append_sheet(wb, ws, "Reportes");
       
-      // Exportar archivo
       XLSX.writeFile(wb, `reportes_ambientales_${new Date().toISOString().slice(0,10)}.xlsx`);
     }
     
-    // Cargar datos al iniciar
     cargarDatos();
   </script>
 </body>
