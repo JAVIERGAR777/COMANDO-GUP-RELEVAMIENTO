@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mapa de Reportes Ambientales</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      padding: 10px;
+      background-color: #f5f5f5;
+    }
+    
+    .container {
+      max-width: 100%;
+      height: calc(100vh - 20px);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      background: white;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    #map {
+      width: 100%;
+      flex-grow: 1;
+    }
+    
+    .map-controls {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      z-index: 1000;
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      width: 300px;
+    }
+    
+    .filter-group {
+      margin-bottom: 12px;
+    }
+    
+    .filter-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+    
+    select, input, button {
+      width: 100%;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+      font-size: 0.9rem;
+    }
+    
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+      margin-top: 5px;
+      transition: background-color 0.2s;
+    }
+    
+    button:hover {
+      background-color: #2980b9;
+    }
+    
+    .button-export {
+      background-color: #27ae60;
+    }
+    
+    .button-export:hover {
+      background-color: #219955;
+    }
+    
+    .legend {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1000;
+      background: white;
+      padding: 12px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    
+    .legend-color {
+      width: 18px;
+      height: 18px;
+      margin-right: 8px;
+      border-radius: 50%;
+      border: 1px solid #fff;
+      box-shadow: 0 0 2px rgba(0,0,0,0.3);
+    }
+    
+    .flatpickr-input {
+      background-color: white;
+    }
+    
+    #resultadosContainer {
+      max-height: 200px;
+      overflow-y: auto;
+      margin-top: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 10px;
+      display: none;
+    }
+    
+    .resultado-item {
+      padding: 8px;
+      border-bottom: 1px solid #eee;
+      font-size: 0.9rem;
+    }
+    
+    .resultado-item:last-child {
+      border-bottom: none;
+    }
+    
+    .controls-container {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .controls-container button {
+      flex: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="map"></div>
+    
+    <div class="map-controls">
+      <div class="filter-group">
+        <label for="filterProblematica">Tipo de problemática</label>
+        <select id="filterProblematica">
+          <option value="todas">Todas las problemáticas</option>
+          <option value="Postes Caídos">Postes Caídos</option>
+          <option value="Autos Quemados">Autos Quemados</option>
+          <option value="Basurales">Basurales</option>
+          <option value="Auto abandonado / Notificar">Auto abandonado</option>
+        </select>
+      </div>
+      
+      <div class="filter-group">
+        <label for="filterFechaDesde">Desde</label>
+        <input type="text" id="filterFechaDesde" class="flatpickr-input" placeholder="Seleccione fecha">
+      </div>
+      
+      <div class="filter-group">
+        <label for="filterFechaHasta">Hasta</label>
+        <input type="text" id="filterFechaHasta" class="flatpickr-input" placeholder="Seleccione fecha">
+      </div>
+      
+      <div class="controls-container">
+        <button onclick="cargarDatos()">Aplicar filtros</button>
+        <button onclick="mostrarResultados()">Ver resultados</button>
+      </div>
+      
+      <div id="resultadosContainer"></div>
+      
+      <button class="button-export" onclick="exportarAExcel()" style="margin-top: 10px; display: none;" id="exportButton">
+        📊 Exportar a Excel
+      </button>
+    </div>
+    
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: #e74c3c;"></div>
+        <span>Postes Caídos</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: #3498db;"></div>
+        <span>Autos Quemados</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: #2ecc71;"></div>
+        <span>Basurales</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: #f39c12;"></div>
+        <span>Auto abandonado</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let datosFiltrados = [];
+    
+    var map = L.map('map').setView([-34.9223, -57.9551], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+    
+    flatpickr("#filterFechaDesde", {
+      locale: "es",
+      dateFormat: "d/m/Y",
+      maxDate: new Date()
+    });
+    
+    flatpickr("#filterFechaHasta", {
+      locale: "es",
+      dateFormat: "d/m/Y",
+      maxDate: new Date()
+    });
+    
+    var markersLayer = L.layerGroup().addTo(map);
+    
+    var problematicaColors = {
+      "Postes Caídos": "#e74c3c",
+      "Autos Quemados": "#3498db",
+      "Basurales": "#2ecc71",
+      "Auto abandonado / Notificar": "#f39c12"
+    };
+    
+    function crearIcono(problematica) {
+      return L.divIcon({
+        className: 'custom-marker',
+        html: `<div style="background-color: ${problematicaColors[problematica] || '#333'}; 
+               width: 20px; height: 20px; border-radius: 50%; 
+               border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.3);"></div>`,
+        iconSize: [20, 20],
+        iconAnchor: [10, 10]
+      });
+    }
+    
+    function parseFecha(fechaStr) {
+      if (!fechaStr) return null;
+      
+      const partes = fechaStr.split(' ');
+      if (partes.length > 0) {
+        const fechaPartes = partes[0].split('/');
+        if (fechaPartes.length === 3) {
+          return new Date(
+            parseInt(fechaPartes[2]),
+            parseInt(fechaPartes[1]) - 1,
+            parseInt(fechaPartes[0])
+          );
+        }
+      }
+      return null;
+    }
+    
+    function cargarDatos() {
+      markersLayer.clearLayers();
+      document.getElementById('resultadosContainer').style.display = 'none';
+      document.getElementById('exportButton').style.display = 'none';
+      
+      fetch('https://api.sheetbest.com/sheets/07e37804-b3ae-4786-8a84-7867b0cfaad2')
+        .then(response => response.json())
+        .then(data => {
+          const filtroProblematica = document.getElementById('filterProblematica').value;
+          const fechaDesdeStr = document.getElementById('filterFechaDesde').value;
+          const fechaHastaStr = document.getElementById('filterFechaHasta').value;
+          
+          let fechaDesde = fechaDesdeStr ? 
+            flatpickr.parseDate(fechaDesdeStr, "d/m/Y") : null;
+          let fechaHasta = fechaHastaStr ? 
+            flatpickr.parseDate(fechaHastaStr, "d/m/Y") : null;
+          
+          if (fechaHasta) {
+            fechaHasta.setHours(23, 59, 59, 999);
+          }
+          
+          datosFiltrados = data.filter(item => {
+            if (!item.Y || !item.X) return false;
+            
+            if (filtroProblematica !== 'todas' && item.Problemática !== filtroProblematica) {
+              return false;
+            }
+            
+            const fechaReporte = parseFecha(item['Fecha y Hora de Carga']);
+            if (fechaReporte) {
+              if (fechaDesde && fechaReporte < fechaDesde) return false;
+              if (fechaHasta && fechaReporte > fechaHasta) return false;
+            }
+            
+            return true;
+          });
+          
+          datosFiltrados.forEach(item => {
+            const marker = L.marker([item.Y, item.X], {
+              icon: crearIcono(item.Problemática)
+            }).addTo(markersLayer);
+            
+            marker.bindPopup(`
+              <strong>${item.Problemática}</strong><br>
+              <small>${item.Dirección || 'Sin dirección'}</small><br>
+              <p>${item['Ampliación / Detalles'] || 'Sin detalles'}</p>
+              <small>Reportado el: ${item['Fecha y Hora de Carga']}</small>
+            `);
+          });
+          
+          if (datosFiltrados.length > 0) {
+            document.getElementById('exportButton').style.display = 'block';
+          }
+        })
+        .catch(error => {
+          console.error('Error al cargar datos:', error);
+          alert("Error al cargar los datos. Intente nuevamente.");
+        });
+    }
+    
+    function mostrarResultados() {
+      const container = document.getElementById('resultadosContainer');
+      container.innerHTML = '';
+      
+      if (datosFiltrados.length === 0) {
+        container.innerHTML = '<div class="resultado-item">No hay resultados con los filtros actuales</div>';
+      } else {
+        datosFiltrados.forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'resultado-item';
+          div.innerHTML = `
+            <strong>${item.Problemática}</strong><br>
+            ${item.Dirección || 'Sin dirección'}<br>
+            <small>${item['Fecha y Hora de Carga'] || 'Sin fecha'}</small>
+          `;
+          container.appendChild(div);
+        });
+      }
+      
+      container.style.display = 'block';
+    }
+    
+    function exportarAExcel() {
+      if (datosFiltrados.length === 0) {
+        alert("No hay datos para exportar");
+        return;
+      }
+      
+      const datosExportar = datosFiltrados.map(item => ({
+        'Problemática': item.Problemática,
+        'Dirección': item.Dirección || '',
+        'Fecha': item['Fecha y Hora de Carga'] ? item['Fecha y Hora de Carga'].split(' ')[0] : '',
+        'Hora': item['Fecha y Hora de Carga'] ? item['Fecha y Hora de Carga'].split(' ')[1] || '' : ''
+      }));
+      
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(datosExportar);
+      
+      XLSX.utils.book_append_sheet(wb, ws, "Reportes");
+      
+      XLSX.writeFile(wb, `reportes_ambientales_${new Date().toISOString().slice(0,10)}.xlsx`);
+    }
+    
+    cargarDatos();
+  </script>
+</body>
+</html>
