@@ -183,7 +183,6 @@
       flex: 1;
     }
     
-    /* Estilos para el modal de reportes */
     .modal {
       display: none;
       position: fixed;
@@ -278,7 +277,6 @@
       gap: 20px;
     }
     
-    /* Estilos para la grilla de franjas horarias */
     .heatmap-container {
       margin: 20px 0;
       overflow-x: auto;
@@ -405,7 +403,6 @@
     </div>
   </div>
 
-  <!-- Modal para generar reportes -->
   <div id="reportModal" class="modal">
     <div class="modal-content">
       <span class="close" onclick="cerrarModalReporte()">&times;</span>
@@ -455,7 +452,6 @@
   </div>
 
   <script>
-    // Configuración global de jsPDF
     const { jsPDF } = window.jspdf;
     
     let datosFiltrados = [];
@@ -554,7 +550,6 @@
       document.getElementById('exportButton').style.display = 'none';
       document.getElementById('reportButton').style.display = 'none';
       
-      // URL modificada para obtener todos los registros
       fetch('https://api.sheetbest.com/sheets/07e37804-b3ae-4786-8a84-7867b0cfaad2/tabs/Hoja 1')
         .then(response => response.json())
         .then(data => {
@@ -660,7 +655,6 @@
       document.getElementById('reportModal').style.display = 'block';
       document.getElementById('reportPreview').style.display = 'none';
       
-      // Resetear fechas en el modal
       document.getElementById('reportFechaDesde').value = document.getElementById('filterFechaDesde').value;
       document.getElementById('reportFechaHasta').value = document.getElementById('filterFechaHasta').value;
     }
@@ -668,7 +662,6 @@
     function cerrarModalReporte() {
       document.getElementById('reportModal').style.display = 'none';
       
-      // Destruir gráficos si existen
       if (chartProblematicas) {
         chartProblematicas.destroy();
         chartProblematicas = null;
@@ -698,7 +691,6 @@
         fechaHasta.setHours(23, 59, 59, 999);
       }
       
-      // Filtrar datos para el reporte
       const reportData = datosFiltrados.filter(item => {
         const fechaReporte = parseFecha(item['Fecha y Hora de Carga']);
         if (fechaReporte) {
@@ -713,15 +705,12 @@
         return;
       }
       
-      // Procesar datos para gráficos
       procesarDatosParaGraficos(reportData);
       
-      // Mostrar vista previa
       mostrarVistaPreviaReporte(reportData);
     }
     
     function procesarDatosParaGraficos(data) {
-      // Datos para gráfico de problemáticas
       problematicasData = {};
       
       data.forEach(item => {
@@ -732,7 +721,6 @@
         problematicasData[problematica]++;
       });
       
-      // Datos para gráfico temporal (por mes)
       temporalData = {};
       
       data.forEach(item => {
@@ -749,7 +737,6 @@
         }
       });
       
-      // Datos para gráfico de correlación horaria-días
       correlacionData = {
         dias: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
         franjas: ['00-03', '03-06', '06-09', '09-12', '12-15', '15-18', '18-21', '21-24'],
@@ -761,10 +748,9 @@
         const hora = parseHora(item['Fecha y Hora de Carga']);
         
         if (fecha && hora) {
-          const diaSemana = fecha.getDay(); // 0=Domingo, 1=Lunes, etc.
+          const diaSemana = fecha.getDay(); 
           const franja = Math.floor(hora.horas / 3);
           
-          // Asegurarse que esté dentro de los rangos
           if (diaSemana >= 0 && diaSemana < 7 && franja >= 0 && franja < 8) {
             correlacionData.data[diaSemana][franja]++;
           }
@@ -775,7 +761,6 @@
     function mostrarVistaPreviaReporte(data) {
       document.getElementById('reportPreview').style.display = 'block';
       
-      // Actualizar resumen
       const totalEventos = data.length;
       const fechaDesde = document.getElementById('reportFechaDesde').value || 'sin fecha';
       const fechaHasta = document.getElementById('reportFechaHasta').value || 'sin fecha';
@@ -788,19 +773,16 @@
         incluyendo distribución por tipo de problemática, evolución temporal y correlación entre franjas horarias y días de la semana.
       `;
       
-      // Crear gráficos
       crearGraficoProblematicas();
       crearGraficoTemporal();
       crearHeatmapFranjasHorarias();
       
-      // Desplazarse a la vista previa
       document.getElementById('reportPreview').scrollIntoView({ behavior: 'smooth' });
     }
     
     function crearGraficoProblematicas() {
       const ctx = document.getElementById('chartProblematicas').getContext('2d');
       
-      // Destruir gráfico anterior si existe
       if (chartProblematicas) {
         chartProblematicas.destroy();
       }
@@ -853,12 +835,10 @@
     function crearGraficoTemporal() {
       const ctx = document.getElementById('chartTemporal').getContext('2d');
       
-      // Destruir gráfico anterior si existe
       if (chartTemporal) {
         chartTemporal.destroy();
       }
       
-      // Ordenar datos temporales
       const sortedKeys = Object.keys(temporalData).sort((a, b) => {
         const [mesA, añoA] = a.split('/').map(Number);
         const [mesB, añoB] = b.split('/').map(Number);
@@ -925,19 +905,15 @@
       const container = document.getElementById('heatmapContainer');
       container.innerHTML = '';
       
-      // Crear tabla
       const table = document.createElement('table');
       table.className = 'heatmap';
       
-      // Crear encabezado con franjas horarias
       const thead = document.createElement('thead');
       const headerRow = document.createElement('tr');
       
-      // Celda vacía para la esquina
       const emptyHeader = document.createElement('th');
       headerRow.appendChild(emptyHeader);
       
-      // Agregar franjas horarias como encabezados
       correlacionData.franjas.forEach(franja => {
         const th = document.createElement('th');
         th.textContent = franja;
@@ -947,28 +923,22 @@
       thead.appendChild(headerRow);
       table.appendChild(thead);
       
-      // Crear cuerpo de la tabla
       const tbody = document.createElement('tbody');
       
-      // Encontrar el valor máximo para normalizar los colores
       const maxValue = Math.max(...correlacionData.data.flat());
       
-      // Agregar filas para cada día
       correlacionData.dias.forEach((dia, diaIndex) => {
         const row = document.createElement('tr');
         
-        // Celda del día
         const dayCell = document.createElement('td');
         dayCell.className = 'heatmap-day';
         dayCell.textContent = dia;
         row.appendChild(dayCell);
         
-        // Celdas de datos para cada franja horaria
         correlacionData.franjas.forEach((franja, franjaIndex) => {
           const value = correlacionData.data[diaIndex][franjaIndex];
           const cell = document.createElement('td');
           
-          // Calcular intensidad del color
           const opacity = maxValue > 0 ? (value / maxValue) * 0.7 + 0.3 : 0;
           const color = `rgba(52, 152, 219, ${opacity})`;
           
@@ -993,29 +963,25 @@
       const fechaHasta = document.getElementById('reportFechaHasta').value || 'sin fecha';
       const totalEventos = Object.values(problematicasData).reduce((a, b) => a + b, 0);
       
-      // Crear PDF
       const doc = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4'
       });
       
-      // Encabezado
       doc.setFontSize(18);
-      doc.setTextColor(40, 62, 80); // Color azul oscuro
+      doc.setTextColor(40, 62, 80);
       doc.text('Reporte de Eventos Ambientales', 105, 20, null, null, 'center');
       
       doc.setFontSize(12);
       doc.setTextColor(100, 100, 100);
       doc.text(`Período: ${fechaDesde} - ${fechaHasta}`, 105, 28, null, null, 'center');
       
-      // Logo o información de la institución
       doc.setFontSize(10);
       doc.text('Secretaría de Seguridad', 20, 20);
       doc.text('Sistema de Comando y Control', 20, 26);
       doc.text(`Generado el: ${new Date().toLocaleDateString('es')}`, 20, 32);
       
-      // Resumen
       doc.setFontSize(14);
       doc.setTextColor(40, 62, 80);
       doc.text('Resumen Ejecutivo', 20, 45);
@@ -1037,23 +1003,20 @@
         yPosition += 7;
       });
       
-      // Gráfico de problemáticas (como imagen)
       const problematicasCanvas = document.getElementById('chartProblematicas');
       const problematicasImage = problematicasCanvas.toDataURL('image/png', 1.0);
       doc.addImage(problematicasImage, 'PNG', 20, 100, 80, 60);
       
-      // Leyenda del gráfico
       doc.setFontSize(10);
       yPosition = 100;
       Object.entries(problematicasData).forEach(([problematica, cantidad], index) => {
-        if (index < 5) { // Mostrar solo las primeras 5 para no saturar
+        if (index < 5) { 
           doc.setTextColor(0, 0, 0);
           doc.text(`${problematica}: ${cantidad} eventos`, 110, yPosition);
           yPosition += 5;
         }
       });
       
-      // Gráfico temporal
       const temporalCanvas = document.getElementById('chartTemporal');
       const temporalImage = temporalCanvas.toDataURL('image/png', 1.0);
       doc.addPage();
@@ -1062,12 +1025,9 @@
       doc.text('Evolución Temporal de Eventos', 20, 20);
       doc.addImage(temporalImage, 'PNG', 20, 30, 170, 80);
       
-      // Heatmap de franjas horarias
       const heatmapContainer = document.getElementById('heatmapContainer');
       const heatmapImage = heatmapContainer.querySelector('table');
       
-      // Usamos html2canvas para capturar la tabla (necesitarías incluir la librería)
-      // Esta parte requiere que incluyas html2canvas en tu proyecto
       if (typeof html2canvas !== 'undefined') {
         html2canvas(heatmapImage).then(canvas => {
           const imgData = canvas.toDataURL('image/png');
@@ -1077,20 +1037,16 @@
           doc.text('Distribución por Franjas Horarias', 20, 20);
           doc.addImage(imgData, 'PNG', 20, 30, 170, 80);
           
-          // Guardar PDF después de agregar todas las páginas
           doc.save(`reporte_ambiental_${fechaDesde}_${fechaHasta}.pdf`);
         });
       } else {
-        // Si no hay html2canvas, guardar sin el heatmap
         doc.save(`reporte_ambiental_${fechaDesde}_${fechaHasta}.pdf`);
       }
     }
     
-    // Inicializar la aplicación
     cargarDatos();
   </script>
   
-  <!-- Incluir html2canvas para exportar el heatmap a PDF -->
   <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 </body>
 </html>
