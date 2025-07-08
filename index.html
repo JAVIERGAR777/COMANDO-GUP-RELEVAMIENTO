@@ -10,6 +10,9 @@
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.0.0/chartjs-plugin-datalabels.min.js"></script>
   <style>
     * {
       margin: 0;
@@ -113,6 +116,14 @@
       background-color: #219955;
     }
     
+    .button-report {
+      background-color: #9b59b6;
+    }
+    
+    .button-report:hover {
+      background-color: #8e44ad;
+    }
+    
     .legend {
       position: absolute;
       bottom: 20px;
@@ -171,6 +182,159 @@
     .controls-container button {
       flex: 1;
     }
+    
+    /* Estilos para el modal de reportes */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+    
+    .modal-content {
+      background-color: white;
+      margin: 5% auto;
+      padding: 20px;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 900px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    .close:hover {
+      color: black;
+    }
+    
+    .report-controls {
+      margin: 20px 0;
+    }
+    
+    .chart-container {
+      width: 100%;
+      margin: 20px 0;
+      height: 400px;
+    }
+    
+    .chart-container-sm {
+      width: 100%;
+      margin: 20px 0;
+      height: 300px;
+    }
+    
+    canvas {
+      max-width: 100%;
+    }
+    
+    .report-summary {
+      margin: 20px 0;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+    }
+    
+    .tab-container {
+      display: flex;
+      margin-bottom: 15px;
+    }
+    
+    .tab {
+      padding: 10px 20px;
+      background-color: #e9ecef;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px 5px 0 0;
+      margin-right: 5px;
+    }
+    
+    .tab.active {
+      background-color: #3498db;
+      color: white;
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    .grid-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    
+    /* Estilos para la grilla de franjas horarias */
+    .heatmap-container {
+      margin: 20px 0;
+      overflow-x: auto;
+    }
+    
+    .heatmap {
+      border-collapse: collapse;
+      width: 100%;
+    }
+    
+    .heatmap th {
+      background-color: #f8f9fa;
+      padding: 8px;
+      text-align: center;
+      font-weight: 500;
+      border: 1px solid #dee2e6;
+    }
+    
+    .heatmap td {
+      padding: 10px;
+      text-align: center;
+      border: 1px solid #dee2e6;
+      position: relative;
+    }
+    
+    .heatmap-cell {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 3px;
+    }
+    
+    .heatmap-day {
+      font-weight: 500;
+      background-color: #f8f9fa;
+      padding: 8px;
+      text-align: right;
+      border: 1px solid #dee2e6;
+    }
+    
+    @media (max-width: 768px) {
+      .grid-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .heatmap th {
+        font-size: 0.8rem;
+        padding: 5px;
+      }
+      
+      .heatmap-day {
+        font-size: 0.8rem;
+      }
+    }
   </style>
 </head>
 <body>
@@ -211,9 +375,14 @@
       
       <div id="resultadosContainer"></div>
       
-      <button class="button-export" onclick="exportarAExcel()" style="margin-top: 10px; display: none;" id="exportButton">
-        📊 Exportar a Excel
-      </button>
+      <div class="controls-container">
+        <button class="button-export" onclick="exportarAExcel()" style="margin-top: 10px; display: none;" id="exportButton">
+          📊 Exportar a Excel
+        </button>
+        <button class="button-report" onclick="abrirModalReporte()" style="margin-top: 10px; display: none;" id="reportButton">
+          📄 Generar Reporte
+        </button>
+      </div>
     </div>
     
     <div class="legend">
@@ -236,8 +405,66 @@
     </div>
   </div>
 
+  <!-- Modal para generar reportes -->
+  <div id="reportModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="cerrarModalReporte()">&times;</span>
+      <h2>Generar Reporte en PDF</h2>
+      
+      <div class="report-controls">
+        <div class="filter-group">
+          <label for="reportFechaDesde">Desde</label>
+          <input type="text" id="reportFechaDesde" class="flatpickr-input" placeholder="Seleccione fecha">
+        </div>
+        
+        <div class="filter-group">
+          <label for="reportFechaHasta">Hasta</label>
+          <input type="text" id="reportFechaHasta" class="flatpickr-input" placeholder="Seleccione fecha">
+        </div>
+        
+        <button onclick="generarReporte()" class="button-report">Generar Vista Previa</button>
+      </div>
+      
+      <div id="reportPreview" style="display: none;">
+        <div class="report-summary">
+          <h3>Resumen del Reporte</h3>
+          <p id="reportSummaryText"></p>
+        </div>
+        
+        <div class="grid-container">
+          <div class="chart-container">
+            <canvas id="chartProblematicas"></canvas>
+          </div>
+          <div class="chart-container">
+            <canvas id="chartTemporal"></canvas>
+          </div>
+        </div>
+        
+        <div class="chart-container">
+          <h3>Distribución por Franjas Horarias</h3>
+          <div id="heatmapContainer" class="heatmap-container"></div>
+        </div>
+        
+        <div class="controls-container">
+          <button onclick="generarPDF()" class="button-report" style="margin-top: 20px;">
+            📄 Descargar Reporte PDF
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
+    // Configuración global de jsPDF
+    const { jsPDF } = window.jspdf;
+    
     let datosFiltrados = [];
+    let problematicasData = {};
+    let temporalData = {};
+    let correlacionData = {};
+    let chartProblematicas = null;
+    let chartTemporal = null;
+    let chartCorrelacion = null;
     
     var map = L.map('map').setView([-34.9223, -57.9551], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -251,6 +478,18 @@
     });
     
     flatpickr("#filterFechaHasta", {
+      locale: "es",
+      dateFormat: "d/m/Y",
+      maxDate: new Date()
+    });
+    
+    flatpickr("#reportFechaDesde", {
+      locale: "es",
+      dateFormat: "d/m/Y",
+      maxDate: new Date()
+    });
+    
+    flatpickr("#reportFechaHasta", {
       locale: "es",
       dateFormat: "d/m/Y",
       maxDate: new Date()
@@ -293,12 +532,30 @@
       return null;
     }
     
+    function parseHora(fechaStr) {
+      if (!fechaStr) return null;
+      
+      const partes = fechaStr.split(' ');
+      if (partes.length > 1) {
+        const horaPartes = partes[1].split(':');
+        if (horaPartes.length >= 2) {
+          return {
+            horas: parseInt(horaPartes[0]),
+            minutos: parseInt(horaPartes[1])
+          };
+        }
+      }
+      return null;
+    }
+    
     function cargarDatos() {
       markersLayer.clearLayers();
       document.getElementById('resultadosContainer').style.display = 'none';
       document.getElementById('exportButton').style.display = 'none';
+      document.getElementById('reportButton').style.display = 'none';
       
-      fetch('https://api.sheetbest.com/sheets/07e37804-b3ae-4786-8a84-7867b0cfaad2')
+      // URL modificada para obtener todos los registros
+      fetch('https://api.sheetbest.com/sheets/07e37804-b3ae-4786-8a84-7867b0cfaad2/tabs/Hoja 1')
         .then(response => response.json())
         .then(data => {
           const filtroProblematica = document.getElementById('filterProblematica').value;
@@ -345,7 +602,10 @@
           
           if (datosFiltrados.length > 0) {
             document.getElementById('exportButton').style.display = 'block';
+            document.getElementById('reportButton').style.display = 'block';
           }
+          
+          console.log(`Datos cargados: ${datosFiltrados.length} de ${data.length} registros`);
         })
         .catch(error => {
           console.error('Error al cargar datos:', error);
@@ -396,7 +656,441 @@
       XLSX.writeFile(wb, `reportes_ambientales_${new Date().toISOString().slice(0,10)}.xlsx`);
     }
     
+    function abrirModalReporte() {
+      document.getElementById('reportModal').style.display = 'block';
+      document.getElementById('reportPreview').style.display = 'none';
+      
+      // Resetear fechas en el modal
+      document.getElementById('reportFechaDesde').value = document.getElementById('filterFechaDesde').value;
+      document.getElementById('reportFechaHasta').value = document.getElementById('filterFechaHasta').value;
+    }
+    
+    function cerrarModalReporte() {
+      document.getElementById('reportModal').style.display = 'none';
+      
+      // Destruir gráficos si existen
+      if (chartProblematicas) {
+        chartProblematicas.destroy();
+        chartProblematicas = null;
+      }
+      
+      if (chartTemporal) {
+        chartTemporal.destroy();
+        chartTemporal = null;
+      }
+      
+      if (chartCorrelacion) {
+        chartCorrelacion.destroy();
+        chartCorrelacion = null;
+      }
+    }
+    
+    function generarReporte() {
+      const fechaDesdeStr = document.getElementById('reportFechaDesde').value;
+      const fechaHastaStr = document.getElementById('reportFechaHasta').value;
+      
+      let fechaDesde = fechaDesdeStr ? 
+        flatpickr.parseDate(fechaDesdeStr, "d/m/Y") : null;
+      let fechaHasta = fechaHastaStr ? 
+        flatpickr.parseDate(fechaHastaStr, "d/m/Y") : null;
+      
+      if (fechaHasta) {
+        fechaHasta.setHours(23, 59, 59, 999);
+      }
+      
+      // Filtrar datos para el reporte
+      const reportData = datosFiltrados.filter(item => {
+        const fechaReporte = parseFecha(item['Fecha y Hora de Carga']);
+        if (fechaReporte) {
+          if (fechaDesde && fechaReporte < fechaDesde) return false;
+          if (fechaHasta && fechaReporte > fechaHasta) return false;
+        }
+        return true;
+      });
+      
+      if (reportData.length === 0) {
+        alert("No hay datos para generar el reporte con los filtros seleccionados");
+        return;
+      }
+      
+      // Procesar datos para gráficos
+      procesarDatosParaGraficos(reportData);
+      
+      // Mostrar vista previa
+      mostrarVistaPreviaReporte(reportData);
+    }
+    
+    function procesarDatosParaGraficos(data) {
+      // Datos para gráfico de problemáticas
+      problematicasData = {};
+      
+      data.forEach(item => {
+        const problematica = item.Problemática;
+        if (!problematicasData[problematica]) {
+          problematicasData[problematica] = 0;
+        }
+        problematicasData[problematica]++;
+      });
+      
+      // Datos para gráfico temporal (por mes)
+      temporalData = {};
+      
+      data.forEach(item => {
+        const fecha = parseFecha(item['Fecha y Hora de Carga']);
+        if (fecha) {
+          const mes = fecha.getMonth() + 1;
+          const año = fecha.getFullYear();
+          const clave = `${mes}/${año}`;
+          
+          if (!temporalData[clave]) {
+            temporalData[clave] = 0;
+          }
+          temporalData[clave]++;
+        }
+      });
+      
+      // Datos para gráfico de correlación horaria-días
+      correlacionData = {
+        dias: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
+        franjas: ['00-03', '03-06', '06-09', '09-12', '12-15', '15-18', '18-21', '21-24'],
+        data: Array(7).fill().map(() => Array(8).fill(0))
+      };
+      
+      data.forEach(item => {
+        const fecha = parseFecha(item['Fecha y Hora de Carga']);
+        const hora = parseHora(item['Fecha y Hora de Carga']);
+        
+        if (fecha && hora) {
+          const diaSemana = fecha.getDay(); // 0=Domingo, 1=Lunes, etc.
+          const franja = Math.floor(hora.horas / 3);
+          
+          // Asegurarse que esté dentro de los rangos
+          if (diaSemana >= 0 && diaSemana < 7 && franja >= 0 && franja < 8) {
+            correlacionData.data[diaSemana][franja]++;
+          }
+        }
+      });
+    }
+    
+    function mostrarVistaPreviaReporte(data) {
+      document.getElementById('reportPreview').style.display = 'block';
+      
+      // Actualizar resumen
+      const totalEventos = data.length;
+      const fechaDesde = document.getElementById('reportFechaDesde').value || 'sin fecha';
+      const fechaHasta = document.getElementById('reportFechaHasta').value || 'sin fecha';
+      
+      document.getElementById('reportSummaryText').innerHTML = `
+        <strong>Período analizado:</strong> ${fechaDesde} - ${fechaHasta}<br>
+        <strong>Total de eventos registrados:</strong> ${totalEventos}<br>
+        <strong>Problemáticas identificadas:</strong> ${Object.keys(problematicasData).length} tipos diferentes<br><br>
+        Este reporte contiene un análisis detallado de los eventos ambientales registrados en el sistema, 
+        incluyendo distribución por tipo de problemática, evolución temporal y correlación entre franjas horarias y días de la semana.
+      `;
+      
+      // Crear gráficos
+      crearGraficoProblematicas();
+      crearGraficoTemporal();
+      crearHeatmapFranjasHorarias();
+      
+      // Desplazarse a la vista previa
+      document.getElementById('reportPreview').scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    function crearGraficoProblematicas() {
+      const ctx = document.getElementById('chartProblematicas').getContext('2d');
+      
+      // Destruir gráfico anterior si existe
+      if (chartProblematicas) {
+        chartProblematicas.destroy();
+      }
+      
+      const labels = Object.keys(problematicasData);
+      const data = Object.values(problematicasData);
+      const backgroundColors = labels.map(label => problematicaColors[label] || '#999999');
+      
+      chartProblematicas = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: backgroundColors,
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: {
+              display: true,
+              text: 'Distribución de Problemáticas',
+              font: {
+                size: 16
+              }
+            },
+            legend: {
+              position: 'right'
+            },
+            datalabels: {
+              formatter: (value, ctx) => {
+                const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                const percentage = Math.round((value / total) * 100);
+                return `${percentage}%`;
+              },
+              color: '#fff',
+              font: {
+                weight: 'bold'
+              }
+            }
+          }
+        },
+        plugins: [ChartDataLabels]
+      });
+    }
+    
+    function crearGraficoTemporal() {
+      const ctx = document.getElementById('chartTemporal').getContext('2d');
+      
+      // Destruir gráfico anterior si existe
+      if (chartTemporal) {
+        chartTemporal.destroy();
+      }
+      
+      // Ordenar datos temporales
+      const sortedKeys = Object.keys(temporalData).sort((a, b) => {
+        const [mesA, añoA] = a.split('/').map(Number);
+        const [mesB, añoB] = b.split('/').map(Number);
+        
+        if (añoA !== añoB) return añoA - añoB;
+        return mesA - mesB;
+      });
+      
+      const labels = sortedKeys.map(key => {
+        const [mes, año] = key.split('/');
+        const nombreMes = new Date(2000, parseInt(mes) - 1, 1).toLocaleString('es', { month: 'short' });
+        return `${nombreMes} ${año}`;
+      });
+      
+      const data = sortedKeys.map(key => temporalData[key]);
+      
+      chartTemporal = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Eventos por mes',
+            data: data,
+            backgroundColor: '#3498db',
+            borderColor: '#2980b9',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: {
+              display: true,
+              text: 'Evolución Temporal de Eventos',
+              font: {
+                size: 16
+              }
+            },
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Cantidad de Eventos'
+              }
+            },
+            x: {
+              title: {
+                display: true,
+                text: 'Período'
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    function crearHeatmapFranjasHorarias() {
+      const container = document.getElementById('heatmapContainer');
+      container.innerHTML = '';
+      
+      // Crear tabla
+      const table = document.createElement('table');
+      table.className = 'heatmap';
+      
+      // Crear encabezado con franjas horarias
+      const thead = document.createElement('thead');
+      const headerRow = document.createElement('tr');
+      
+      // Celda vacía para la esquina
+      const emptyHeader = document.createElement('th');
+      headerRow.appendChild(emptyHeader);
+      
+      // Agregar franjas horarias como encabezados
+      correlacionData.franjas.forEach(franja => {
+        const th = document.createElement('th');
+        th.textContent = franja;
+        headerRow.appendChild(th);
+      });
+      
+      thead.appendChild(headerRow);
+      table.appendChild(thead);
+      
+      // Crear cuerpo de la tabla
+      const tbody = document.createElement('tbody');
+      
+      // Encontrar el valor máximo para normalizar los colores
+      const maxValue = Math.max(...correlacionData.data.flat());
+      
+      // Agregar filas para cada día
+      correlacionData.dias.forEach((dia, diaIndex) => {
+        const row = document.createElement('tr');
+        
+        // Celda del día
+        const dayCell = document.createElement('td');
+        dayCell.className = 'heatmap-day';
+        dayCell.textContent = dia;
+        row.appendChild(dayCell);
+        
+        // Celdas de datos para cada franja horaria
+        correlacionData.franjas.forEach((franja, franjaIndex) => {
+          const value = correlacionData.data[diaIndex][franjaIndex];
+          const cell = document.createElement('td');
+          
+          // Calcular intensidad del color
+          const opacity = maxValue > 0 ? (value / maxValue) * 0.7 + 0.3 : 0;
+          const color = `rgba(52, 152, 219, ${opacity})`;
+          
+          const cellContent = document.createElement('div');
+          cellContent.className = 'heatmap-cell';
+          cellContent.style.backgroundColor = color;
+          cellContent.textContent = value > 0 ? value : '';
+          
+          cell.appendChild(cellContent);
+          row.appendChild(cell);
+        });
+        
+        tbody.appendChild(row);
+      });
+      
+      table.appendChild(tbody);
+      container.appendChild(table);
+    }
+    
+    function generarPDF() {
+      const fechaDesde = document.getElementById('reportFechaDesde').value || 'sin fecha';
+      const fechaHasta = document.getElementById('reportFechaHasta').value || 'sin fecha';
+      const totalEventos = Object.values(problematicasData).reduce((a, b) => a + b, 0);
+      
+      // Crear PDF
+      const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      // Encabezado
+      doc.setFontSize(18);
+      doc.setTextColor(40, 62, 80); // Color azul oscuro
+      doc.text('Reporte de Eventos Ambientales', 105, 20, null, null, 'center');
+      
+      doc.setFontSize(12);
+      doc.setTextColor(100, 100, 100);
+      doc.text(`Período: ${fechaDesde} - ${fechaHasta}`, 105, 28, null, null, 'center');
+      
+      // Logo o información de la institución
+      doc.setFontSize(10);
+      doc.text('Secretaría de Seguridad', 20, 20);
+      doc.text('Sistema de Comando y Control', 20, 26);
+      doc.text(`Generado el: ${new Date().toLocaleDateString('es')}`, 20, 32);
+      
+      // Resumen
+      doc.setFontSize(14);
+      doc.setTextColor(40, 62, 80);
+      doc.text('Resumen Ejecutivo', 20, 45);
+      
+      doc.setFontSize(11);
+      doc.setTextColor(0, 0, 0);
+      const summaryText = [
+        `Total de eventos registrados: ${totalEventos}`,
+        `Tipos de problemáticas identificadas: ${Object.keys(problematicasData).length}`,
+        ``,
+        `Este reporte contiene un análisis detallado de los eventos ambientales registrados`,
+        `en el sistema durante el período especificado. A continuación se presentan los`,
+        `gráficos y estadísticas relevantes para la toma de decisiones.`
+      ];
+      
+      let yPosition = 55;
+      summaryText.forEach(line => {
+        doc.text(line, 20, yPosition);
+        yPosition += 7;
+      });
+      
+      // Gráfico de problemáticas (como imagen)
+      const problematicasCanvas = document.getElementById('chartProblematicas');
+      const problematicasImage = problematicasCanvas.toDataURL('image/png', 1.0);
+      doc.addImage(problematicasImage, 'PNG', 20, 100, 80, 60);
+      
+      // Leyenda del gráfico
+      doc.setFontSize(10);
+      yPosition = 100;
+      Object.entries(problematicasData).forEach(([problematica, cantidad], index) => {
+        if (index < 5) { // Mostrar solo las primeras 5 para no saturar
+          doc.setTextColor(0, 0, 0);
+          doc.text(`${problematica}: ${cantidad} eventos`, 110, yPosition);
+          yPosition += 5;
+        }
+      });
+      
+      // Gráfico temporal
+      const temporalCanvas = document.getElementById('chartTemporal');
+      const temporalImage = temporalCanvas.toDataURL('image/png', 1.0);
+      doc.addPage();
+      doc.setFontSize(14);
+      doc.setTextColor(40, 62, 80);
+      doc.text('Evolución Temporal de Eventos', 20, 20);
+      doc.addImage(temporalImage, 'PNG', 20, 30, 170, 80);
+      
+      // Heatmap de franjas horarias
+      const heatmapContainer = document.getElementById('heatmapContainer');
+      const heatmapImage = heatmapContainer.querySelector('table');
+      
+      // Usamos html2canvas para capturar la tabla (necesitarías incluir la librería)
+      // Esta parte requiere que incluyas html2canvas en tu proyecto
+      if (typeof html2canvas !== 'undefined') {
+        html2canvas(heatmapImage).then(canvas => {
+          const imgData = canvas.toDataURL('image/png');
+          doc.addPage();
+          doc.setFontSize(14);
+          doc.setTextColor(40, 62, 80);
+          doc.text('Distribución por Franjas Horarias', 20, 20);
+          doc.addImage(imgData, 'PNG', 20, 30, 170, 80);
+          
+          // Guardar PDF después de agregar todas las páginas
+          doc.save(`reporte_ambiental_${fechaDesde}_${fechaHasta}.pdf`);
+        });
+      } else {
+        // Si no hay html2canvas, guardar sin el heatmap
+        doc.save(`reporte_ambiental_${fechaDesde}_${fechaHasta}.pdf`);
+      }
+    }
+    
+    // Inicializar la aplicación
     cargarDatos();
   </script>
+  
+  <!-- Incluir html2canvas para exportar el heatmap a PDF -->
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 </body>
 </html>
